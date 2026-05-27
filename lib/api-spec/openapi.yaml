@@ -274,6 +274,7 @@ components:
       required:
         - printerIp
         - printerPort
+        - serverPort
         - apiKey
         - updatedAt
       properties:
@@ -281,6 +282,10 @@ components:
           type: string
         printerPort:
           type: integer
+          description: TCP port on the Zebra printer (default 9100)
+        serverPort:
+          type: integer
+          description: HTTP port the SendPrint bridge listens on (takes effect after restart)
         apiKey:
           type: string
         updatedAt:
@@ -293,6 +298,10 @@ components:
           type: string
           minLength: 1
         printerPort:
+          type: integer
+          minimum: 1
+          maximum: 65535
+        serverPort:
           type: integer
           minimum: 1
           maximum: 65535

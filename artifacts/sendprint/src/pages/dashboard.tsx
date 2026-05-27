@@ -4,7 +4,9 @@ import {
   useGetLogStats, 
   useGetLogs, 
   useTestPrint,
-  getGetLogsQueryKey
+  getGetLogsQueryKey,
+  getGetPrinterStatusQueryKey,
+  getGetLogStatsQueryKey
 } from "@workspace/api-client-react";
 import { 
   Printer, 
@@ -36,10 +38,12 @@ export default function Dashboard() {
   const queryClient = useQueryClient();
 
   const { data: printerStatus, isLoading: statusLoading } = useGetPrinterStatus({
-    query: { refetchInterval: 10000 }
+    query: { queryKey: getGetPrinterStatusQueryKey(), refetchInterval: 10000 }
   });
   
-  const { data: stats, isLoading: statsLoading } = useGetLogStats();
+  const { data: stats, isLoading: statsLoading } = useGetLogStats({
+    query: { queryKey: getGetLogStatsQueryKey() }
+  });
   
   const { data: logs, isLoading: logsLoading } = useGetLogs(
     { limit: 10 },

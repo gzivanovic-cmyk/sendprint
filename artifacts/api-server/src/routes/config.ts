@@ -4,10 +4,11 @@ import { generateApiKey, getOrCreateConfig, updateConfig } from "../lib/config";
 
 const router: IRouter = Router();
 
-function toResponse(c: { printerIp: string; printerPort: number; apiKey: string; updatedAt: Date }) {
+function toResponse(c: { printerIp: string; printerPort: number; serverPort: number; apiKey: string; updatedAt: Date }) {
   return {
     printerIp: c.printerIp,
     printerPort: c.printerPort,
+    serverPort: c.serverPort,
     apiKey: c.apiKey,
     updatedAt: c.updatedAt.toISOString(),
   };

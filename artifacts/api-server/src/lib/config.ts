@@ -19,6 +19,7 @@ export async function getOrCreateConfig(): Promise<ConfigRow> {
       id: SINGLETON_ID,
       printerIp: "192.168.1.100",
       printerPort: 9100,
+      serverPort: Number(process.env.PORT) || 8080,
       apiKey: generateApiKey(),
     })
     .onConflictDoNothing({ target: configTable.id })
@@ -31,6 +32,7 @@ export async function getOrCreateConfig(): Promise<ConfigRow> {
 export async function updateConfig(patch: {
   printerIp?: string;
   printerPort?: number;
+  serverPort?: number;
   apiKey?: string;
 }): Promise<ConfigRow> {
   await getOrCreateConfig();

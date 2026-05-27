@@ -65,7 +65,8 @@ export const GetPrinterStatusResponse = zod.object({
  */
 export const GetConfigResponse = zod.object({
   "printerIp": zod.string(),
-  "printerPort": zod.number(),
+  "printerPort": zod.number().describe('TCP port on the Zebra printer (default 9100)'),
+  "serverPort": zod.number().describe('HTTP port the SendPrint bridge listens on (takes effect after restart)'),
   "apiKey": zod.string(),
   "updatedAt": zod.coerce.date()
 })
@@ -77,6 +78,8 @@ export const GetConfigResponse = zod.object({
 
 export const updateConfigBodyPrinterPortMax = 65535;
 
+export const updateConfigBodyServerPortMax = 65535;
+
 export const updateConfigBodyApiKeyMin = 8;
 
 
@@ -84,12 +87,14 @@ export const updateConfigBodyApiKeyMin = 8;
 export const UpdateConfigBody = zod.object({
   "printerIp": zod.string().min(1).optional(),
   "printerPort": zod.number().min(1).max(updateConfigBodyPrinterPortMax).optional(),
+  "serverPort": zod.number().min(1).max(updateConfigBodyServerPortMax).optional(),
   "apiKey": zod.string().min(updateConfigBodyApiKeyMin).optional()
 })
 
 export const UpdateConfigResponse = zod.object({
   "printerIp": zod.string(),
-  "printerPort": zod.number(),
+  "printerPort": zod.number().describe('TCP port on the Zebra printer (default 9100)'),
+  "serverPort": zod.number().describe('HTTP port the SendPrint bridge listens on (takes effect after restart)'),
   "apiKey": zod.string(),
   "updatedAt": zod.coerce.date()
 })
@@ -100,7 +105,8 @@ export const UpdateConfigResponse = zod.object({
  */
 export const RotateApiKeyResponse = zod.object({
   "printerIp": zod.string(),
-  "printerPort": zod.number(),
+  "printerPort": zod.number().describe('TCP port on the Zebra printer (default 9100)'),
+  "serverPort": zod.number().describe('HTTP port the SendPrint bridge listens on (takes effect after restart)'),
   "apiKey": zod.string(),
   "updatedAt": zod.coerce.date()
 })

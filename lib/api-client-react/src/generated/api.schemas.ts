@@ -61,7 +61,10 @@ export interface PrinterStatus {
 
 export interface Config {
   printerIp: string;
+  /** TCP port on the Zebra printer (default 9100) */
   printerPort: number;
+  /** HTTP port the SendPrint bridge listens on (takes effect after restart) */
+  serverPort: number;
   apiKey: string;
   updatedAt: string;
 }
@@ -74,6 +77,11 @@ export interface ConfigUpdate {
      * @maximum 65535
      */
   printerPort?: number;
+  /**
+     * @minimum 1
+     * @maximum 65535
+     */
+  serverPort?: number;
   /** @minLength 8 */
   apiKey?: string;
 }

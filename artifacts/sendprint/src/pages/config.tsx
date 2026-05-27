@@ -22,6 +22,7 @@ import { useState } from "react";
 const configSchema = z.object({
   printerIp: z.string().min(1, "Printer IP is required"),
   printerPort: z.coerce.number().min(1, "Port must be at least 1").max(65535, "Port must be at most 65535"),
+  serverPort: z.coerce.number().min(1, "Port must be at least 1").max(65535, "Port must be at most 65535"),
   apiKey: z.string().min(8, "API key must be at least 8 characters"),
 });
 
@@ -39,6 +40,7 @@ export default function ConfigPage() {
     defaultValues: {
       printerIp: "",
       printerPort: 9100,
+      serverPort: 8080,
       apiKey: "",
     },
   });
@@ -48,6 +50,7 @@ export default function ConfigPage() {
       form.reset({
         printerIp: config.printerIp,
         printerPort: config.printerPort,
+        serverPort: config.serverPort,
         apiKey: config.apiKey,
       });
     }
@@ -139,6 +142,22 @@ export default function ConfigPage() {
                         <FormControl>
                           <Input type="number" {...field} />
                         </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="serverPort"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Server Port</FormLabel>
+                        <FormControl>
+                          <Input type="number" {...field} />
+                        </FormControl>
+                        <p className="text-xs text-muted-foreground">
+                          HTTP port the bridge listens on. Takes effect after restart.
+                        </p>
                         <FormMessage />
                       </FormItem>
                     )}

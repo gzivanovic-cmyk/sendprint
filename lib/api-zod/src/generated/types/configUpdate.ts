@@ -14,6 +14,11 @@ export interface ConfigUpdate {
      * @maximum 65535
      */
   printerPort?: number;
+  /**
+     * @minimum 1
+     * @maximum 65535
+     */
+  serverPort?: number;
   /** @minLength 8 */
   apiKey?: string;
 }
