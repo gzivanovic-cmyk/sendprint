@@ -166,9 +166,6 @@ importers:
 
   artifacts/api-server:
     dependencies:
-      '@libsql/linux-x64-gnu':
-        specifier: 0.5.29
-        version: 0.5.29
       '@workspace/api-zod':
         specifier: workspace:*
         version: link:../../lib/api-zod
@@ -230,6 +227,13 @@ importers:
       thread-stream:
         specifier: 3.1.0
         version: 3.1.0
+    optionalDependencies:
+      '@libsql/linux-arm64-gnu':
+        specifier: 0.5.29
+        version: 0.5.29
+      '@libsql/linux-x64-gnu':
+        specifier: 0.5.29
+        version: 0.5.29
 
   artifacts/mockup-sandbox:
     devDependencies:
@@ -3439,7 +3443,8 @@ snapshots:
   '@libsql/linux-arm64-musl@0.5.29':
     optional: true
 
-  '@libsql/linux-x64-gnu@0.5.29': {}
+  '@libsql/linux-x64-gnu@0.5.29':
+    optional: true
 
   '@libsql/linux-x64-musl@0.5.29':
     optional: true

@@ -1,0 +1,31 @@
+# SendPrint Bridge — minimal compose file for a customer install.
+#
+# Usage:
+#   1. Set an admin password (only used the very first time the bridge starts;
+#      after that, change it from the dashboard).
+#   2. docker compose up -d
+#   3. Open http://<host>:8080 and configure the printer IP.
+#   4. Point Promesse at  http://<host>:8080/api/print  with the X-API-Key
+#      shown on the dashboard's Configuration page.
+
+services:
+  sendprint:
+    image: sendprint:latest
+    # If you prefer to build the image locally instead of pulling, uncomment:
+    # build: .
+    container_name: sendprint
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      # First-run admin password. After the admin exists this value is ignored.
+      ADMIN_PASSWORD: "change-me-on-first-start"
+      # Optional: lock the /api/print endpoint to Promesse's origin.
+      # PROMESSE_ORIGIN: "https://promesse.example.com"
+      # Optional: session lifetime in days (default 7).
+      # SESSION_TTL_DAYS: "7"
+    volumes:
+      - sendprint-data:/data
+
+volumes:
+  sendprint-data:
