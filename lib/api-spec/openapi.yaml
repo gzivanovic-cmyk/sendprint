@@ -3,20 +3,25 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: SendPrint API — receives print jobs from Promesse and forwards ZPL to a Zebra label printer
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: print
+    description: Print job operations
+  - name: config
+    description: Printer configuration
+  - name: logs
+    description: Print history
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +29,160 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /print:
+    post:
+      operationId: submitPrintJob
+      tags: [print]
+      summary: Submit a print job (Promesse-compatible endpoint)
+      description: Receives a ZPL payload with X-API-Key header and forwards it to the configured Zebra printer
+      parameters:
+        - in: header
+          name: X-API-Key
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PrintJobInput"
+      responses:
+        "200":
+          description: Print job processed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PrintJobResult"
+        "401":
+          description: Invalid API key
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "502":
+          description: Printer unreachable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /test-print:
+    post:
+      operationId: testPrint
+      tags: [print]
+      summary: Send a test label to the printer
+      responses:
+        "200":
+          description: Test print result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PrintJobResult"
+        "502":
+          description: Printer unreachable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /printer/status:
+    get:
+      operationId: getPrinterStatus
+      tags: [print]
+      summary: Check if the configured Zebra printer is reachable
+      responses:
+        "200":
+          description: Printer status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PrinterStatus"
+  /config:
+    get:
+      operationId: getConfig
+      tags: [config]
+      summary: Get current printer & server configuration
+      responses:
+        "200":
+          description: Configuration
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Config"
+    put:
+      operationId: updateConfig
+      tags: [config]
+      summary: Update printer & server configuration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConfigUpdate"
+      responses:
+        "200":
+          description: Updated configuration
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Config"
+  /config/rotate-key:
+    post:
+      operationId: rotateApiKey
+      tags: [config]
+      summary: Generate a new random API key
+      responses:
+        "200":
+          description: Updated configuration with new key
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Config"
+  /logs:
+    get:
+      operationId: getLogs
+      tags: [logs]
+      summary: Get recent print jobs
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 50
+            minimum: 1
+            maximum: 500
+      responses:
+        "200":
+          description: List of print jobs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PrintJob"
+  /logs/stats:
+    get:
+      operationId: getLogStats
+      tags: [logs]
+      summary: Get aggregated print statistics
+      responses:
+        "200":
+          description: Print statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LogStats"
+  /logs/clear:
+    post:
+      operationId: clearLogs
+      tags: [logs]
+      summary: Delete all print job history
+      responses:
+        "200":
+          description: Logs cleared
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClearResult"
 components:
   schemas:
     HealthStatus:
@@ -33,4 +192,137 @@ components:
           type: string
       required:
         - status
-
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+    PrintJobInput:
+      type: object
+      required:
+        - zpl
+      properties:
+        zpl:
+          type: string
+          description: Raw ZPL commands to send to the printer
+        source:
+          type: string
+          description: Optional source identifier (e.g. "Promesse")
+    PrintJobResult:
+      type: object
+      required:
+        - success
+        - jobId
+      properties:
+        success:
+          type: boolean
+        jobId:
+          type: integer
+        message:
+          type: string
+        bytesSent:
+          type: integer
+    PrintJob:
+      type: object
+      required:
+        - id
+        - createdAt
+        - status
+        - bytesSent
+      properties:
+        id:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [success, failed]
+        source:
+          type: ["string", "null"]
+        zplPreview:
+          type: ["string", "null"]
+        bytesSent:
+          type: integer
+        errorMessage:
+          type: ["string", "null"]
+        printerIp:
+          type: ["string", "null"]
+    PrinterStatus:
+      type: object
+      required:
+        - online
+        - printerIp
+        - printerPort
+        - checkedAt
+      properties:
+        online:
+          type: boolean
+        printerIp:
+          type: string
+        printerPort:
+          type: integer
+        checkedAt:
+          type: string
+          format: date-time
+        message:
+          type: ["string", "null"]
+    Config:
+      type: object
+      required:
+        - printerIp
+        - printerPort
+        - apiKey
+        - updatedAt
+      properties:
+        printerIp:
+          type: string
+        printerPort:
+          type: integer
+        apiKey:
+          type: string
+        updatedAt:
+          type: string
+          format: date-time
+    ConfigUpdate:
+      type: object
+      properties:
+        printerIp:
+          type: string
+          minLength: 1
+        printerPort:
+          type: integer
+          minimum: 1
+          maximum: 65535
+        apiKey:
+          type: string
+          minLength: 8
+    LogStats:
+      type: object
+      required:
+        - totalJobs
+        - successCount
+        - failedCount
+        - last24hCount
+        - lastJobAt
+      properties:
+        totalJobs:
+          type: integer
+        successCount:
+          type: integer
+        failedCount:
+          type: integer
+        last24hCount:
+          type: integer
+        lastJobAt:
+          type: ["string", "null"]
+          format: date-time
+    ClearResult:
+      type: object
+      required:
+        - deleted
+      properties:
+        deleted:
+          type: integer
