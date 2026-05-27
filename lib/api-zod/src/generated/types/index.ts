@@ -6,6 +6,11 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './authChangePasswordBody';
+export * from './authLoginBody';
+export * from './authResult';
+export * from './authSetupBody';
+export * from './authStatus';
 export * from './clearResult';
 export * from './config';
 export * from './configUpdate';

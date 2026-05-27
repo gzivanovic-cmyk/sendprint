@@ -1,6 +1,8 @@
-import { db, configTable, printJobsTable } from "@workspace/db";
+import { db, configTable, printJobsTable, adminTable } from "@workspace/db";
+import { AdminAlreadyExistsError } from "./types";
 import { eq, desc, sql } from "drizzle-orm";
 import type {
+  AdminRecord,
   ConfigDefaults,
   ConfigPatch,
   ConfigRecord,
@@ -33,6 +35,16 @@ function toJob(row: typeof printJobsTable.$inferSelect): PrintJobRecord {
     bytesSent: row.bytesSent,
     errorMessage: row.errorMessage,
     printerIp: row.printerIp,
+  };
+}
+
+function toAdmin(row: typeof adminTable.$inferSelect): AdminRecord {
+  return {
+    id: row.id,
+    passwordHash: row.passwordHash,
+    sessionSecret: row.sessionSecret,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
   };
 }
 
@@ -108,5 +120,47 @@ export class PostgresStorage implements Storage {
       .delete(printJobsTable)
       .returning({ id: printJobsTable.id });
     return deleted.length;
+  }
+
+  async getAdmin(): Promise<AdminRecord | null> {
+    const rows = await db
+      .select()
+      .from(adminTable)
+      .where(eq(adminTable.id, SINGLETON_ID))
+      .limit(1);
+    return rows[0] ? toAdmin(rows[0]) : null;
+  }
+
+  async createAdmin(
+    passwordHash: string,
+    sessionSecret: string,
+  ): Promise<AdminRecord> {
+    const inserted = await db
+      .insert(adminTable)
+      .values({ id: SINGLETON_ID, passwordHash, sessionSecret })
+      .onConflictDoNothing({ target: adminTable.id })
+      .returning();
+    if (inserted.length === 0) {
+      throw new AdminAlreadyExistsError();
+    }
+    return toAdmin(inserted[0]!);
+  }
+
+  async updateAdminPassword(passwordHash: string): Promise<AdminRecord> {
+    const updated = await db
+      .update(adminTable)
+      .set({ passwordHash, updatedAt: new Date() })
+      .where(eq(adminTable.id, SINGLETON_ID))
+      .returning();
+    return toAdmin(updated[0]!);
+  }
+
+  async rotateAdminSessionSecret(sessionSecret: string): Promise<AdminRecord> {
+    const updated = await db
+      .update(adminTable)
+      .set({ sessionSecret, updatedAt: new Date() })
+      .where(eq(adminTable.id, SINGLETON_ID))
+      .returning();
+    return toAdmin(updated[0]!);
   }
 }

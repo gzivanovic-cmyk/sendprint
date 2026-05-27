@@ -49,6 +49,14 @@ export interface LogStatsRecord {
   lastJobAt: Date | null;
 }
 
+export interface AdminRecord {
+  id: number;
+  passwordHash: string;
+  sessionSecret: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface Storage {
   getOrCreateConfig(defaults: ConfigDefaults): Promise<ConfigRecord>;
   updateConfig(patch: ConfigPatch): Promise<ConfigRecord>;
@@ -56,4 +64,15 @@ export interface Storage {
   listPrintJobs(limit: number): Promise<PrintJobRecord[]>;
   getLogStats(): Promise<LogStatsRecord>;
   clearPrintJobs(): Promise<number>;
+  getAdmin(): Promise<AdminRecord | null>;
+  createAdmin(passwordHash: string, sessionSecret: string): Promise<AdminRecord>;
+  updateAdminPassword(passwordHash: string): Promise<AdminRecord>;
+  rotateAdminSessionSecret(sessionSecret: string): Promise<AdminRecord>;
+}
+
+export class AdminAlreadyExistsError extends Error {
+  constructor() {
+    super("Admin already configured");
+    this.name = "AdminAlreadyExistsError";
+  }
 }

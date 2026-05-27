@@ -2,6 +2,7 @@ import path from "node:path";
 import fs from "node:fs";
 import Database from "libsql";
 import type {
+  AdminRecord,
   ConfigDefaults,
   ConfigPatch,
   ConfigRecord,
@@ -10,6 +11,7 @@ import type {
   PrintJobRecord,
   Storage,
 } from "./types";
+import { AdminAlreadyExistsError } from "./types";
 
 const SINGLETON_ID = 1;
 
@@ -33,6 +35,14 @@ interface JobRow {
   printer_ip: string | null;
 }
 
+interface AdminRow {
+  id: number;
+  password_hash: string;
+  session_secret: string;
+  created_at: number;
+  updated_at: number;
+}
+
 function rowToConfig(row: ConfigRow): ConfigRecord {
   return {
     id: row.id,
@@ -54,6 +64,16 @@ function rowToJob(row: JobRow): PrintJobRecord {
     bytesSent: row.bytes_sent,
     errorMessage: row.error_message,
     printerIp: row.printer_ip,
+  };
+}
+
+function rowToAdmin(row: AdminRow): AdminRecord {
+  return {
+    id: row.id,
+    passwordHash: row.password_hash,
+    sessionSecret: row.session_secret,
+    createdAt: new Date(row.created_at),
+    updatedAt: new Date(row.updated_at),
   };
 }
 
@@ -91,6 +111,13 @@ export class SqliteStorage implements Storage {
       );
       CREATE INDEX IF NOT EXISTS print_jobs_created_at_idx ON print_jobs (created_at DESC);
       CREATE INDEX IF NOT EXISTS print_jobs_status_idx ON print_jobs (status);
+      CREATE TABLE IF NOT EXISTS admin (
+        id INTEGER PRIMARY KEY,
+        password_hash TEXT NOT NULL,
+        session_secret TEXT NOT NULL,
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL
+      );
     `);
   }
 
@@ -213,5 +240,57 @@ export class SqliteStorage implements Storage {
   async clearPrintJobs(): Promise<number> {
     const result = this.db.prepare("DELETE FROM print_jobs").run();
     return Number(result.changes);
+  }
+
+  async getAdmin(): Promise<AdminRecord | null> {
+    const row = this.db
+      .prepare("SELECT * FROM admin WHERE id = ?")
+      .get(SINGLETON_ID) as AdminRow | undefined;
+    return row ? rowToAdmin(row) : null;
+  }
+
+  async createAdmin(
+    passwordHash: string,
+    sessionSecret: string,
+  ): Promise<AdminRecord> {
+    const now = Date.now();
+    const info = this.db
+      .prepare(
+        `INSERT INTO admin (id, password_hash, session_secret, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?)
+         ON CONFLICT(id) DO NOTHING`,
+      )
+      .run(SINGLETON_ID, passwordHash, sessionSecret, now, now);
+    if (info.changes === 0) {
+      throw new AdminAlreadyExistsError();
+    }
+    const row = this.db
+      .prepare("SELECT * FROM admin WHERE id = ?")
+      .get(SINGLETON_ID) as AdminRow;
+    return rowToAdmin(row);
+  }
+
+  async updateAdminPassword(passwordHash: string): Promise<AdminRecord> {
+    this.db
+      .prepare(
+        "UPDATE admin SET password_hash = ?, updated_at = ? WHERE id = ?",
+      )
+      .run(passwordHash, Date.now(), SINGLETON_ID);
+    const row = this.db
+      .prepare("SELECT * FROM admin WHERE id = ?")
+      .get(SINGLETON_ID) as AdminRow;
+    return rowToAdmin(row);
+  }
+
+  async rotateAdminSessionSecret(sessionSecret: string): Promise<AdminRecord> {
+    this.db
+      .prepare(
+        "UPDATE admin SET session_secret = ?, updated_at = ? WHERE id = ?",
+      )
+      .run(sessionSecret, Date.now(), SINGLETON_ID);
+    const row = this.db
+      .prepare("SELECT * FROM admin WHERE id = ?")
+      .get(SINGLETON_ID) as AdminRow;
+    return rowToAdmin(row);
   }
 }

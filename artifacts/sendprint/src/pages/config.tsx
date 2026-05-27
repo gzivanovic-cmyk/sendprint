@@ -18,6 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Skeleton } from "@/components/ui/skeleton";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useState } from "react";
+import ChangePasswordCard from "@/components/change-password-card";
 
 const configSchema = z.object({
   printerIp: z.string().min(1, "Printer IP is required"),
@@ -246,6 +247,8 @@ export default function ConfigPage() {
           </CardContent>
         </Card>
       </div>
+
+      <ChangePasswordCard />
     </div>
   );
 }

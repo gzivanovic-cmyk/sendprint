@@ -7,10 +7,30 @@ import Layout from "@/components/layout";
 import Dashboard from "@/pages/dashboard";
 import ConfigPage from "@/pages/config";
 import LogsPage from "@/pages/logs";
+import LoginPage from "@/pages/login";
+import { useAuth } from "@/hooks/use-auth";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: { retry: false },
+  },
+});
 
-function Router() {
+function AuthGate() {
+  const { status, isLoading } = useAuth();
+
+  if (isLoading || !status) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-muted-foreground">
+        Loading…
+      </div>
+    );
+  }
+
+  if (status.needsSetup || !status.authenticated) {
+    return <LoginPage needsSetup={status.needsSetup} />;
+  }
+
   return (
     <Layout>
       <Switch>
@@ -28,7 +48,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-          <Router />
+          <AuthGate />
         </WouterRouter>
         <Toaster />
       </TooltipProvider>

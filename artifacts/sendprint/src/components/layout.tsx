@@ -1,9 +1,12 @@
 import { Link, useLocation } from "wouter";
-import { Activity, Settings, FileText, Printer } from "lucide-react";
+import { Activity, Settings, FileText, Printer, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
+  const { logout } = useAuth();
 
   const navItems = [
     { href: "/", label: "Dashboard", icon: Activity },
@@ -37,13 +40,23 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             </Link>
           ))}
         </nav>
-        <div className="p-4 border-t border-sidebar-border text-xs text-sidebar-foreground/50">
-          SendPrint Bridge v1.0.0
+        <div className="p-4 border-t border-sidebar-border space-y-3">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full justify-start text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+            onClick={() => logout.mutate()}
+            disabled={logout.isPending}
+            data-testid="button-sign-out"
+          >
+            <LogOut className="w-4 h-4 mr-2" />
+            Sign out
+          </Button>
+          <div className="text-xs text-sidebar-foreground/50">SendPrint Bridge v1.0.0</div>
         </div>
       </aside>
 
       <main className="flex-1 flex flex-col min-h-0 overflow-hidden">
-        {/* Mobile header could go here, omitting for simplicity/focus on desktop admin UI */}
         <div className="flex-1 overflow-auto">
           {children}
         </div>

@@ -157,3 +157,70 @@ export const ClearLogsResponse = zod.object({
 })
 
 
+/**
+ * @summary Get the current admin auth status
+ */
+export const GetAuthStatusResponse = zod.object({
+  "needsSetup": zod.boolean(),
+  "authenticated": zod.boolean(),
+  "expiresAt": zod.coerce.date().nullish()
+})
+
+
+/**
+ * @summary Create the initial admin password (first-run only)
+ */
+export const setupAdminBodyPasswordMin = 8;
+
+
+
+export const SetupAdminBody = zod.object({
+  "password": zod.string().min(setupAdminBodyPasswordMin)
+})
+
+export const SetupAdminResponse = zod.object({
+  "success": zod.boolean()
+})
+
+
+/**
+ * @summary Sign in as admin
+ */
+
+
+
+export const LoginBody = zod.object({
+  "password": zod.string().min(1)
+})
+
+export const LoginResponse = zod.object({
+  "success": zod.boolean()
+})
+
+
+/**
+ * @summary Sign out
+ */
+export const LogoutResponse = zod.object({
+  "success": zod.boolean()
+})
+
+
+/**
+ * @summary Change the admin password
+ */
+
+export const changePasswordBodyNewPasswordMin = 8;
+
+
+
+export const ChangePasswordBody = zod.object({
+  "currentPassword": zod.string().min(1),
+  "newPassword": zod.string().min(changePasswordBodyNewPasswordMin)
+})
+
+export const ChangePasswordResponse = zod.object({
+  "success": zod.boolean()
+})
+
+

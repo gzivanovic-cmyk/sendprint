@@ -99,6 +99,34 @@ export interface ClearResult {
   deleted: number;
 }
 
+export interface AuthStatus {
+  needsSetup: boolean;
+  authenticated: boolean;
+  /** @nullable */
+  expiresAt?: string | null;
+}
+
+export interface AuthResult {
+  success: boolean;
+}
+
+export interface AuthLoginBody {
+  /** @minLength 1 */
+  password: string;
+}
+
+export interface AuthSetupBody {
+  /** @minLength 8 */
+  password: string;
+}
+
+export interface AuthChangePasswordBody {
+  /** @minLength 1 */
+  currentPassword: string;
+  /** @minLength 8 */
+  newPassword: string;
+}
+
 export type GetLogsParams = {
 /**
  * @minimum 1

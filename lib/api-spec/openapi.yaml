@@ -16,6 +16,8 @@ tags:
     description: Printer configuration
   - name: logs
     description: Print history
+  - name: auth
+    description: Admin authentication
 paths:
   /healthz:
     get:
@@ -183,6 +185,102 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ClearResult"
+  /auth/me:
+    get:
+      operationId: getAuthStatus
+      tags: [auth]
+      summary: Get the current admin auth status
+      responses:
+        "200":
+          description: Auth status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthStatus"
+  /auth/setup:
+    post:
+      operationId: setupAdmin
+      tags: [auth]
+      summary: Create the initial admin password (first-run only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthSetupBody"
+      responses:
+        "200":
+          description: Admin created and signed in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResult"
+        "409":
+          description: Admin already configured
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Sign in as admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthLoginBody"
+      responses:
+        "200":
+          description: Signed in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResult"
+        "401":
+          description: Invalid password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Sign out
+      responses:
+        "200":
+          description: Signed out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResult"
+  /auth/change-password:
+    post:
+      operationId: changePassword
+      tags: [auth]
+      summary: Change the admin password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthChangePasswordBody"
+      responses:
+        "200":
+          description: Password changed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResult"
+        "401":
+          description: Not authenticated or current password incorrect
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 components:
   schemas:
     HealthStatus:
@@ -335,3 +433,51 @@ components:
       properties:
         deleted:
           type: integer
+    AuthStatus:
+      type: object
+      required:
+        - needsSetup
+        - authenticated
+      properties:
+        needsSetup:
+          type: boolean
+        authenticated:
+          type: boolean
+        expiresAt:
+          type: ["string", "null"]
+          format: date-time
+    AuthResult:
+      type: object
+      required:
+        - success
+      properties:
+        success:
+          type: boolean
+    AuthLoginBody:
+      type: object
+      required:
+        - password
+      properties:
+        password:
+          type: string
+          minLength: 1
+    AuthSetupBody:
+      type: object
+      required:
+        - password
+      properties:
+        password:
+          type: string
+          minLength: 8
+    AuthChangePasswordBody:
+      type: object
+      required:
+        - currentPassword
+        - newPassword
+      properties:
+        currentPassword:
+          type: string
+          minLength: 1
+        newPassword:
+          type: string
+          minLength: 8
