@@ -10,7 +10,13 @@
 
 services:
   sendprint:
-    image: sendprint:latest
+    # Multi-arch image published by .github/workflows/release.yml.
+    # The image name is always the GitHub repository slug — replace
+    # OWNER/REPO with whatever appears after github.com/ in the repo URL
+    # (e.g. ghcr.io/acme/sendprint:latest). Pin to a specific version
+    # (e.g. :1.0.0) instead of :latest for predictable upgrades.
+    # See RELEASING.md for the full tag scheme.
+    image: ghcr.io/OWNER/REPO:latest
     # If you prefer to build the image locally instead of pulling, uncomment:
     # build: .
     container_name: sendprint

@@ -18,14 +18,31 @@ a Synology NAS, a Raspberry Pi 4/5, an Intel NUC, etc.
 
 ## Quick start — `docker run`
 
+The bridge is published as a multi-arch image (linux/amd64 + linux/arm64)
+on GitHub Container Registry by `.github/workflows/release.yml`. The
+image name is **always the GitHub repository slug** — i.e. whatever
+appears after `github.com/` in the repo URL:
+
+```
+ghcr.io/OWNER/REPO:latest      # newest release
+ghcr.io/OWNER/REPO:1           # pin to major line
+ghcr.io/OWNER/REPO:1.0.0       # pin to an exact release
+```
+
+For example, if this codebase lives at `github.com/acme/sendprint`,
+the pull URL is `ghcr.io/acme/sendprint:latest`. GHCR images published
+from a public repo are public — no `docker login` required to pull.
+
 ```bash
+docker pull ghcr.io/OWNER/REPO:latest
+
 docker run -d \
   --name sendprint \
   --restart unless-stopped \
   -p 8080:8080 \
   -v sendprint-data:/data \
   -e ADMIN_PASSWORD='choose-a-strong-password' \
-  sendprint:latest
+  ghcr.io/OWNER/REPO:latest
 ```
 
 That's it. Open `http://<host-ip>:8080` in a browser, sign in with the
@@ -89,9 +106,12 @@ admin password hash, and the print history — lives in the
 - **Upgrade:** pull the new image and recreate the container. The
   volume is preserved.
   ```bash
-  docker pull sendprint:latest
+  docker pull ghcr.io/OWNER/REPO:latest
   docker compose up -d   # or: docker rm -f sendprint && docker run ...
   ```
+  To pin to an exact version instead of tracking `latest`, replace
+  `:latest` with `:1.0.0` (or whichever release you want). See
+  `RELEASING.md` for the full tag scheme.
 
 `restart: unless-stopped` (set in the compose file, or via
 `--restart unless-stopped` on `docker run`) means the bridge comes back
