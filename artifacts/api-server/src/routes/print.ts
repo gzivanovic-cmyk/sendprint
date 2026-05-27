@@ -1,14 +1,13 @@
 import { Router, type IRouter } from "express";
-import { db, printJobsTable } from "@workspace/db";
 import { SubmitPrintJobBody } from "@workspace/api-zod";
 import { getOrCreateConfig } from "../lib/config";
 import { sendZplToPrinter, checkPrinterReachable } from "../lib/printer";
+import { getStorage } from "../storage";
 
 const router: IRouter = Router();
 
 function previewZpl(zpl: string): string {
-  const trimmed = zpl.length > 500 ? zpl.slice(0, 500) + "..." : zpl;
-  return trimmed;
+  return zpl.length > 500 ? zpl.slice(0, 500) + "..." : zpl;
 }
 
 router.post("/print", async (req, res) => {
@@ -28,19 +27,15 @@ router.post("/print", async (req, res) => {
 
   const result = await sendZplToPrinter(config.printerIp, config.printerPort, zpl);
 
-  const inserted = await db
-    .insert(printJobsTable)
-    .values({
-      status: result.success ? "success" : "failed",
-      source: source ?? "Promesse",
-      zplPreview: previewZpl(zpl),
-      bytesSent: result.bytesSent,
-      errorMessage: result.errorMessage,
-      printerIp: config.printerIp,
-    })
-    .returning();
-
-  const job = inserted[0]!;
+  const storage = await getStorage();
+  const job = await storage.insertPrintJob({
+    status: result.success ? "success" : "failed",
+    source: source ?? "Promesse",
+    zplPreview: previewZpl(zpl),
+    bytesSent: result.bytesSent,
+    errorMessage: result.errorMessage,
+    printerIp: config.printerIp,
+  });
 
   if (!result.success) {
     res.status(502).json({ error: result.errorMessage ?? "Printer unreachable" });
@@ -71,19 +66,15 @@ router.post("/test-print", async (_req, res) => {
 
   const result = await sendZplToPrinter(config.printerIp, config.printerPort, zpl);
 
-  const inserted = await db
-    .insert(printJobsTable)
-    .values({
-      status: result.success ? "success" : "failed",
-      source: "Test print",
-      zplPreview: previewZpl(zpl),
-      bytesSent: result.bytesSent,
-      errorMessage: result.errorMessage,
-      printerIp: config.printerIp,
-    })
-    .returning();
-
-  const job = inserted[0]!;
+  const storage = await getStorage();
+  const job = await storage.insertPrintJob({
+    status: result.success ? "success" : "failed",
+    source: "Test print",
+    zplPreview: previewZpl(zpl),
+    bytesSent: result.bytesSent,
+    errorMessage: result.errorMessage,
+    printerIp: config.printerIp,
+  });
 
   if (!result.success) {
     res.status(502).json({ error: result.errorMessage ?? "Printer unreachable" });
