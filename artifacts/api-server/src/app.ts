@@ -30,6 +30,11 @@ app.use(
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+// Accept raw ZPL as text/plain (legacy SendPrint.exe compatibility) and as
+// application/octet-stream (some clients send it as binary). The print route
+// handles both shapes alongside the canonical JSON body.
+app.use(express.text({ type: ["text/plain", "application/zpl", "text/zpl"], limit: "2mb" }));
+app.use(express.raw({ type: "application/octet-stream", limit: "2mb" }));
 
 app.use("/api", router);
 

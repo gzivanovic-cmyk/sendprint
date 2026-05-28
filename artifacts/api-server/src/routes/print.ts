@@ -18,12 +18,27 @@ router.post("/print", async (req, res) => {
     return;
   }
 
-  const parsed = SubmitPrintJobBody.safeParse(req.body);
-  if (!parsed.success) {
+  // Accept three body shapes for compatibility:
+  //   1. JSON  : { "zpl": "...", "source": "..." }   (canonical)
+  //   2. text  : raw ZPL as text/plain               (legacy SendPrint.exe)
+  //   3. binary: raw ZPL as application/octet-stream (some Promesse builds)
+  let zpl: string | undefined;
+  let source: string | undefined;
+  if (typeof req.body === "string") {
+    zpl = req.body;
+  } else if (Buffer.isBuffer(req.body)) {
+    zpl = req.body.toString("utf8");
+  } else {
+    const parsed = SubmitPrintJobBody.safeParse(req.body);
+    if (parsed.success) {
+      zpl = parsed.data.zpl;
+      source = parsed.data.source;
+    }
+  }
+  if (!zpl || zpl.trim().length === 0) {
     res.status(400).json({ error: "Invalid body: zpl is required" });
     return;
   }
-  const { zpl, source } = parsed.data;
 
   const result = await sendZplToPrinter(config.printerIp, config.printerPort, zpl);
 
