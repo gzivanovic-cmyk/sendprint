@@ -1,0 +1,57 @@
+# SendPrint Bridge — klant-installatie
+#
+# Dit compose-bestand draait twee containers:
+#   1. sendprint   — de bridge zelf (dashboard + /api/print endpoint)
+#   2. watchtower  — checkt elke nacht om 03:00 NL-tijd op een nieuwe versie
+#                    en update de sendprint-container automatisch
+#
+# Configuratie staat in het .env-bestand naast dit bestand. Wijzig daar
+# de variabelen, niet hier. install.bat maakt dat bestand voor je aan.
+
+services:
+  sendprint:
+    # Image wordt automatisch gepubliceerd door .github/workflows/release.yml.
+    # Standaard pinnen we op :latest zodat Watchtower kan updaten. Wil je
+    # een vaste versie? Zet SENDPRINT_IMAGE in .env op bv. ghcr.io/OWNER/REPO:1.2.3.
+    image: ${SENDPRINT_IMAGE:-ghcr.io/OWNER/REPO:latest}
+    container_name: sendprint
+    restart: unless-stopped
+    ports:
+      # Host-poort : container-poort. Wil je een andere host-poort?
+      # Pas SENDPRINT_PORT in .env aan (bv. 8081).
+      - "${SENDPRINT_PORT:-8080}:8080"
+    environment:
+      # Eerste-keer admin-wachtwoord. Wordt alleen gebruikt zolang er nog
+      # geen admin bestaat — daarna wijzig je het via het dashboard.
+      # Belangrijk: bij een nieuwe waarde + container-restart wordt het
+      # bestaande admin-wachtwoord overschreven (handig als je het kwijt bent).
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+    volumes:
+      # Alle data (SQLite-database, configuratie, logs) leeft op deze
+      # volume. Niet weggooien zonder backup!
+      - sendprint-data:/data
+    labels:
+      # Markeer deze container expliciet als "mag door Watchtower geüpdatet
+      # worden". Zonder dit label laat Watchtower 'm met rust.
+      - "com.centurylinklabs.watchtower.enable=true"
+
+  watchtower:
+    image: containrrr/watchtower:latest
+    container_name: sendprint-watchtower
+    restart: unless-stopped
+    environment:
+      # Alleen containers updaten met label watchtower.enable=true
+      WATCHTOWER_LABEL_ENABLE: "true"
+      # Oude images opruimen na een update zodat de schijf niet volloopt
+      WATCHTOWER_CLEANUP: "true"
+      # Tijdzone NL (zomer/winter wordt automatisch opgevangen door cron)
+      TZ: "Europe/Amsterdam"
+      # Cron: elke nacht om 03:00 (sec min uur dag maand weekdag)
+      WATCHTOWER_SCHEDULE: "0 0 3 * * *"
+    volumes:
+      # Watchtower praat met Docker via de socket
+      - /var/run/docker.sock:/var/run/docker.sock
+
+volumes:
+  sendprint-data:
+    name: sendprint-data
