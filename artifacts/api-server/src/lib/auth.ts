@@ -91,8 +91,12 @@ export async function seedAdminFromEnvIfNeeded(): Promise<void> {
   if (!envPassword) return;
   const storage = await getStorage();
   const existing = await storage.getAdmin();
-  if (existing) return;
   const passwordHash = await hashPassword(envPassword);
+  if (existing) {
+    await storage.updateAdminPassword(passwordHash);
+    logger.info("Admin password reset from ADMIN_PASSWORD env var");
+    return;
+  }
   const sessionSecret = generateSecret();
   try {
     await storage.createAdmin(passwordHash, sessionSecret);
