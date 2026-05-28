@@ -24,7 +24,7 @@ COPY artifacts/sendprint/package.json artifacts/sendprint/
 COPY artifacts/mockup-sandbox/package.json artifacts/mockup-sandbox/
 
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-    pnpm install --frozen-lockfile --ignore-scripts
+    pnpm install --frozen-lockfile
 
 # Now bring in the actual source.
 COPY lib lib
