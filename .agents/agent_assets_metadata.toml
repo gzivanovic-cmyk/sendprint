@@ -1,0 +1,14 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "5QRHykvT_ZYTpcd7CD8jW"
+uri = "file://exports/sendprint-uitleg.doc"
+type = "word_document"
+title = "SendPrint uitleg — Word (.doc, open & kopieer naar mail)"
+
+[[outputs]]
+id = "hgUUlWNLb6vYkUxs51XPm"
+uri = "file://exports/sendprint-uitleg.md"
+type = "text"
+title = "SendPrint uitleg — Markdown (om eerst te bewerken)"

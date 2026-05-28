@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<title>SendPrint — uitleg & voorstel</title>
+<style>
+  body { font-family: Calibri, Arial, sans-serif; font-size: 11pt; color: #222; max-width: 780px; margin: 32px auto; padding: 0 24px; line-height: 1.5; }
+  h1 { font-size: 18pt; color: #1a3a5c; border-bottom: 2px solid #1a3a5c; padding-bottom: 6px; }
+  h2 { font-size: 13pt; color: #1a3a5c; margin-top: 26px; }
+  h3 { font-size: 11pt; color: #1a3a5c; margin-top: 20px; }
+  table { border-collapse: collapse; width: 100%; margin: 12px 0; }
+  th, td { border: 1px solid #c8c8c8; padding: 8px 10px; text-align: left; vertical-align: top; }
+  th { background: #eef3f8; font-weight: bold; }
+  ul, ol { padding-left: 22px; }
+  li { margin: 4px 0; }
+  blockquote { border-left: 4px solid #d4a017; background: #fdf6e3; margin: 12px 0; padding: 10px 14px; }
+  code { background: #f2f2f2; padding: 1px 5px; border-radius: 3px; font-family: Consolas, monospace; font-size: 10pt; }
+  .meta { color: #666; font-size: 10pt; }
+  .signature { margin-top: 30px; }
+</style>
+</head>
+<body>
+
+<p><strong>Onderwerp:</strong> SendPrint — vervanging van het oude print-programma (uitleg &amp; voorstel)</p>
+
+<p>Beste [naam],</p>
+
+<p>Hieronder een korte uitleg van <strong>SendPrint</strong>, het nieuwe doorgeefluikje tussen Promesse en de Zebra-labelprinters in de winkels — als vervanging van het huidige .exe-programma.</p>
+
+<h2>Wat het is, in één alinea</h2>
+<p>SendPrint is een klein doorgeefluikje tussen het bestelsysteem <strong>Promesse</strong> en de <strong>Zebra-labelprinter</strong> in de winkel. Promesse zegt "druk dit label af", SendPrint vangt dat op en stuurt het door naar de juiste printer. Daarnaast is er een mini-website (dashboard) waar je ziet of alles werkt, wat er geprint is, en waar je instellingen kunt aanpassen.</p>
+
+<h2>Vergelijking met de huidige situatie</h2>
+<table>
+  <thead>
+    <tr><th></th><th>Huidige versie (.exe)</th><th>Nieuwe versie (SendPrint)</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Vorm</td><td>Windows-programma op de pc</td><td>Modern pakketje, draait overal (Windows, Mac, Linux, mini-pc)</td></tr>
+    <tr><td>Zichtbaarheid</td><td>Zwart venstertje — geen idee of het werkt</td><td>Dashboard in de browser: status, logboek, instellingen, test-knop</td></tr>
+    <tr><td>Beveiliging</td><td>Open poort, geen wachtwoord</td><td>Inloggen met wachtwoord, geheime API-sleutel voor Promesse</td></tr>
+    <tr><td>Updates</td><td>Nieuwe .exe handmatig installeren</td><td>Eén commando: nieuwste versie binnen</td></tr>
+    <tr><td>Foutopsporing</td><td>"Het werkt niet" → bellen</td><td>Operator ziet zelf in het dashboard wat er misging</td></tr>
+  </tbody>
+</table>
+<p>Kortom: hetzelfde doel, maar transparant, veilig en op afstand bij te houden.</p>
+
+<h2>Waar komt het te draaien — belangrijk gegeven</h2>
+<p>Promesse draait <strong>niet</strong> lokaal in de winkel, maar op een externe server die de medewerkers via een <strong>RDP-sessie</strong> benaderen vanaf hun winkel-pc. De <strong>labelprinter staat fysiek in de winkel zelf</strong>. SendPrint moet die twee aan elkaar koppelen.</p>
+<p><strong>De praktischste oplossing: SendPrint op dezelfde winkel-pc waarop de medewerkers de RDP-sessie naar Promesse openen.</strong> Die pc staat sowieso al aan tijdens openingstijden, staat in hetzelfde netwerk als de printer, en SendPrint gebruikt nauwelijks resources — de medewerker merkt er niets van naast zijn RDP-werk. Geen extra hardware nodig, geen extra apparaat om te beheren.</p>
+<p>De Promesse-server stuurt zijn printopdracht over internet naar die winkel-pc, en de pc praat lokaal met de printer. Per winkel één pc, één API-sleutel.</p>
+
+<h2>Wat is er nodig om het te laten draaien</h2>
+<p><strong>Bij Promesse:</strong> niets bijzonders — ze sturen hun printopdracht naar één webadres met één geheime sleutel erbij (dezelfde configuratie die ze nu ook al hebben voor de oude .exe).</p>
+<p><strong>Per winkel:</strong></p>
+<ul>
+  <li>De bestaande Windows-pc die voor de RDP-sessie gebruikt wordt — geen nieuwe hardware nodig.</li>
+  <li><strong>Docker Desktop voor Windows</strong> erop installeren (eenmalig, gratis).</li>
+  <li>Eén regel in de router van de winkel om poort 8080 door te sturen naar die pc (hetzelfde wat voor de oude .exe ook al ingericht was).</li>
+  <li>Het IP-adres van de Zebra-printer.</li>
+  <li>Een wachtwoord voor de beheerder.</li>
+</ul>
+<p>Geen extra database-server, geen mailserver, geen licenties.</p>
+<blockquote><strong>Alternatief:</strong> wil je toch een apart apparaat (bijvoorbeeld omdat de winkel-pc 's nachts uitgaat en je ook na sluitingstijd orders wilt kunnen ontvangen), dan kan SendPrint óók op een goedkoop kastje (mini-pc of Raspberry Pi, eenmalig ±€80–€150). Software is identiek, alleen de plek verandert.</blockquote>
+
+<h2>Beheerbaar en veilig houden</h2>
+<ul>
+  <li><strong>Inloggen met wachtwoord</strong> — alleen de beheerder komt in het dashboard.</li>
+  <li><strong>Aparte API-sleutel</strong> voor Promesse, op elk moment te vernieuwen.</li>
+  <li><strong>Volledig logboek</strong> van elke printopdracht (wanneer, gelukt/mislukt, foutmelding).</li>
+  <li><strong>Automatische updates</strong> met één commando.</li>
+  <li><strong>Gegevens blijven bewaard</strong> bij updates en herstarts.</li>
+  <li><strong>Backup</strong> is één mapje kopiëren.</li>
+</ul>
+
+<h2>Kosten</h2>
+<p><strong>Tijdens de test- en ontwikkelfase — hosten bij Replit (cloud):</strong><br>
+Reserved VM vanaf <strong>±$10/maand</strong> (~€10), plus een Replit Core-abonnement (~$25/maand) voor het ontwikkelen en beheren zelf. Realistisch: <strong>±€35/maand</strong>. Voordeel: snel live, ik kan op afstand meekijken bij problemen. <span class="meta">(Replit-prijzen kunnen wijzigen — actuele tarieven op replit.com/pricing.)</span></p>
+<p><strong>Voor productie — op de bestaande winkel-pc:</strong><br>
+<strong>Geen extra hardware-kosten, geen maandelijkse kosten.</strong> Alleen eenmalig Docker Desktop installeren en het commando draaien. Eventueel kastje als alternatief: ±€80–€150 per winkel.</p>
+<p><strong>Wat de ontwikkeling tot nu toe gekost heeft:</strong><br>
+De exacte ontwikkelkosten staan in mijn Replit-account onder <em>Usage / Billing</em> (kan ik er apart bij zetten). Qua omvang zijn er zes bouwstappen afgerond — basis-bridge, opslag, inlog-beveiliging, verpakking, en automatische publicatie — een gemiddeld project, geen groot project.</p>
+
+<h2>Samenvatting (niet-technisch)</h2>
+<ul>
+  <li><strong>Wat het doet:</strong> Promesse zegt "druk dit label af" → SendPrint stuurt het naar de Zebra-printer → de operator ziet in een dashboard dat het gelukt is.</li>
+  <li><strong>Hoe het werkt:</strong> Promesse stuurt over internet een opdracht naar SendPrint, met een geheime sleutel zodat niemand anders dat kan. SendPrint controleert de sleutel, bewaart de opdracht in een logboek, en stuurt 'm meteen door naar de printer.</li>
+  <li><strong>Wat je nodig hebt per winkel:</strong> de bestaande pc waar Promesse al via RDP op draait, het IP van de printer, een wachtwoord, en de API-sleutel doorgeven aan Promesse.</li>
+</ul>
+
+<h2>Voorstel</h2>
+<ol>
+  <li><strong>Eerst hosten bij Replit</strong> tijdens de test- en eerste-klant-fase (±€35/maand), zodat ik op afstand kan meekijken en problemen snel kan oplossen.</li>
+  <li><strong>Zodra het stabiel loopt</strong> verhuizen naar de bestaande winkel-pc — geen extra hardware, geen maandkosten, en de printer is direct over het lokale netwerk bereikbaar.</li>
+  <li><strong>Voor uitrol naar meerdere winkels</strong> is alleen Docker Desktop + één commando per winkel-pc nodig. Updates duwen we centraal door.</li>
+</ol>
+
+<p>Hoor graag of dit duidelijk is, of dat er nog vragen zijn.</p>
+
+<p class="signature">Met vriendelijke groet,<br>[jouw naam]</p>
+
+</body>
+</html>
