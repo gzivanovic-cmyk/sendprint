@@ -40,20 +40,10 @@ if errorlevel 1 (
 )
 echo       Docker draait. OK.
 
-REM --- Stap 2: .env.example aanwezig + ingevuld? ---------------------------
+REM --- Stap 2: .env.example aanwezig? --------------------------------------
 echo [2/5] Configuratie-template controleren...
 if not exist .env.example (
     echo FOUT: .env.example ontbreekt in deze map. Pakket is incompleet.
-    pause
-    exit /b 1
-)
-findstr /C:"OWNER/REPO" .env.example >nul
-if not errorlevel 1 (
-    echo.
-    echo FOUT: .env.example bevat nog de placeholder 'OWNER/REPO'.
-    echo Dit pakket is niet klaar voor verzending - vraag je leverancier
-    echo om een nieuwe versie met de juiste image-naam.
-    echo.
     pause
     exit /b 1
 )

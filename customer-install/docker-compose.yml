@@ -12,8 +12,8 @@ services:
   sendprint:
     # Image wordt automatisch gepubliceerd door .github/workflows/release.yml.
     # Standaard pinnen we op :latest zodat Watchtower kan updaten. Wil je
-    # een vaste versie? Zet SENDPRINT_IMAGE in .env op bv. ghcr.io/OWNER/REPO:1.2.3.
-    image: ${SENDPRINT_IMAGE:-ghcr.io/OWNER/REPO:latest}
+    # een vaste versie? Zet SENDPRINT_IMAGE in .env op bv. ghcr.io/sendprint-bridge/sendprint:1.2.3.
+    image: ${SENDPRINT_IMAGE:-ghcr.io/sendprint-bridge/sendprint:latest}
     container_name: sendprint
     restart: unless-stopped
     ports:
