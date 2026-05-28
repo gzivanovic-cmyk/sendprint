@@ -34,3 +34,8 @@ externalPort = 3001
 [[ports]]
 localPort = 25005
 externalPort = 3000
+
+[userenv]
+
+[userenv.production]
+STORAGE = "postgres"
